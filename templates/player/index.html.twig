@@ -1,0 +1,62 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <br/>
+    <br/>
+    <div class="container-fluid">
+        <div class="col-md-6 offset-md-3 col-xs-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <a href="{{ path('create-team') }}" class="btn btn-success mb-1">Create Team</a>
+                    <a href="{{ path('create-player') }}" class="btn btn-success mb-1">Add Player</a>
+                </div>
+            </div>
+			<ul class="list-group">
+                {% for player in players %}
+					<li {% if player.id %2 !=0 %} class="list-group-item list-group-item-success" {% else %} class="list-group-item" {% endif %}>
+                        {% if player.team  %} <span class="fi fi-{{ player.team.countryCode }}"></span>
+							<a href="{{ path('edit-team', {id:player.team.id}) }}"> {{ player.team.name }} </a> 
+						{% endif %} | <a href="{{ path('edit-player', {id:player.id}) }}"> {{ player.name }} {{ player.surname }}  </a>
+                        <form action="{{ path('delete-player') }}" method="POST" class="delete_form" >
+							<input type="hidden" name="player_id" value="{{player.id}}"  />
+							<button type="button" class="btn btn-small btn-danger float-end m-1 delete_item_form">
+								Delete
+							</button>
+						</form>
+                    </li>
+				{% endfor %}
+            </ul>
+        </div>
+        <br/>
+		<div class="col-md-6 offset-md-3 col-xs-12">
+            <nav aria-label="Pagination">
+                <ul class="pagination">
+                    {{ knp_pagination_render(players) }}
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function(){
+  $(".delete_item_form").click(function(event) {
+    var self=this;
+	swal({  
+	  title: " Confirm?",  
+	  text: "Are you sure!. You want to delete this Item?",  
+	  type: "warning",  
+	  showCancelButton: true,  
+	  confirmButtonText: " Confirm, delete it!",
+	}).then(function(isConfirm) {
+		if (typeof isConfirm.value !== "undefined") {
+			$(self).parent().submit();
+		}else{
+			return false;
+		} 
+	}); 	
+  });
+});
+</script>
+{% endblock %}

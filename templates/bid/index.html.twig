@@ -1,0 +1,229 @@
+{% extends "base.html.twig" %}
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"/></script>
+{% endblock %}
+{% block content %}
+
+    <br/>
+    <br/>
+    <div class="container-fluid">
+        <div class="col-md-10 offset-md-1">
+            <div class="row" id="app-myteam">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Select/Change Your Current Team
+                        </label>
+                        <select name="team_id" class="form-control" @change="changeMyTeam($event,'{{ url('sell-player') }}')">
+                            {% for team in teams %}
+                                <option value="{{ team.id }}" {% if (myteam) and (team.id == myteam.id) %} selected {% endif %}>
+                                    {{ team.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 offset-md-1">
+            {% if myteam %}
+                <div class="row">
+                    <br/>
+                    <br/>
+                </div>
+                <div class="row" id="app-players">
+                    <div class="col-md-6">
+						<h3 class="">{{ myteam.name }}| ${{ myteam.balance }}</h3>
+                        <ul class="list-group">
+                            <li class="list-group-item" v-for="item in items">
+                                <a @click="redirectTo('{{ path('edit-player', {id:" replace"}) }}',item.id)" href="#">
+                                    {{ " {{ item.name }} {{ item.surname }} " }}
+                                </a>
+                                <button type="button" @click="getBid(item)" class="btn btn-small btn-info float-end m-1">
+                                    Create Bid
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row d-flex justify-content-center" v-if="selectedPlayer.id">
+                            <div class="col col-xl-10">
+                                <div class="card" style="border-radius: 15px;">
+                                    <div class="card-body">
+                                        <h3 class="mb-3">
+                                            {{ "{{ selectedPlayer.name }} {{ selectedPlayer.surname }}" }}
+                                        </h3>
+                                        <p class="small mb-0 text-warning" v-if="bidexist.id">
+                                            Bid exist for the player! Update It or cancele It!
+                                        </p>
+                                        <p class="small mb-0" v-else>
+                                            No Bid exist for the player! Create New one to sell
+                                        </p>
+                                        <hr class="my-4" />
+                                        <form action="" method="POST" @submit="submitForm">
+                                            <div class="row">
+                                                <div class="form-group">
+                                                    <label class="form-label">
+                                                        Bid Price
+                                                    </label>
+                                                    <input type="number" v-model="bid_price" class="form-control" id="bid_price" name="bid_price" placeholder="Price" value="" />
+                                                    <p v-if="submiting && (bid_price < 1000 || bid_price > 1000000)" class="text-danger">
+                                                        Please enter the bid amount in between 1000 to 1000000.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <br/>
+                                            <button type="submit" v-if="bidexist.id" class="btn btn-warning" style="min-width:140px;">
+                                                Update Bid
+                                            </button>
+                                            <button type="submit" v-else class="btn btn-primary" style="min-width:140px;">
+                                                Create Bid
+                                            </button>
+                                            <button type="button" v-if="bidexist.id" @click="confirmAndDelete(bidexist)" class="btn btn-danger" style="min-width:140px;">
+                                                Delete Bid
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+<script>
+{% if myteam %}
+myObject = new Vue({
+	el: '#app-players',
+	data: {
+        items: [],
+		selectedPlayer: {},
+		bidexist: {},
+		bid_price:0,
+		submiting:0,
+		disableform:0,
+    },
+    mounted: function () {
+		var self = this;
+        $.ajax({
+            url: "{{ path('players-by-team', {id:myteam.id}) }}",
+            method: 'GET',
+            success: function (data) {
+               self.items = data.data;
+			},
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    },
+	methods: {
+		alertMessage(responce) {
+			if(responce.code == 200 && responce.message !=""){
+				swal("Success", responce.message, "success");
+			}else if(responce.code != 200 && responce.message !=""){
+				swal("Error", responce.message, "error");
+			}
+		},
+		redirectTo(url,id) {
+			var redirectTo = url.replace("replace",id);
+			window.location.href = redirectTo;
+		},
+		getBid(player) {
+			this.bidexist = {};
+			this.bid_price = 0;
+			this.selectedPlayer = player;
+			var self = this;
+			$.ajax({
+				url: "{{ path('edit-player-bid') }}",
+				method: 'POST',
+				data:{'player_id':player.id},
+				success: function (data) {
+					self.bidexist = data.data;
+					self.bid_price = self.bidexist.bid_price;
+					self.alertMessage(data);
+				},
+				error: function (error) {
+					swal("Error", "Something Went Wrong!", "error");
+				}
+			});
+		},
+		submitForm(e) {
+			var self = this;
+			this.submiting = 1;
+			if(this.bid_price < 1000 || this.bid_price > 1000000){
+				e.preventDefault();
+				return false;
+			}
+			this.disableform = 1;
+			var url = "{{ path('create-bid') }}";
+			var formdata = {'player_id':self.selectedPlayer.id,'bid_price':self.bid_price};
+			
+			if(self.bidexist && self.bidexist.id){
+				formdata.bid_id = self.bidexist.id;
+				url = "{{ path('update-bid') }}";
+			}
+			$.ajax({
+				url: url,
+				method: 'POST',
+				data: formdata,
+				success: function (data) {
+					self.disableform = 0;
+					self.alertMessage(data);
+					self.getBid(self.selectedPlayer);
+				},
+				error: function (error) {
+					self.disableform = 0;
+					swal("Error", "Something Went Wrong!", "error");
+				}
+			});
+			e.preventDefault();
+			return false;
+		},
+		confirmAndDelete(bid) {
+			var self = this;
+			swal({  
+			  title: " Confirm?",  
+			  text: "Are you sure!. You want to delete this Item?",  
+			  type: "warning",  
+			  showCancelButton: true,  
+			  confirmButtonText: " Confirm, remove it!",
+			  closeOnConfirm: false,
+			}).then(function(isConfirm) {
+				if (typeof isConfirm.value !== "undefined") {
+					$.ajax({
+						url: "{{ path('delete-bid') }}",
+						method: 'POST',
+						data: {'bid_id':self.bidexist.id},
+						success: function (data) {
+							self.alertMessage(data);
+							self.getBid(self.selectedPlayer);
+						},
+						error: function (error) {
+							swal("Error", "Something Went Wrong!", "error");
+						}
+					});
+				} 
+			}); 
+		},
+	}
+})
+{% endif %}
+
+myObject = new Vue({
+	el: '#app-myteam',
+	data: {
+		key: ""
+	},
+	methods: {
+		changeMyTeam(event,url) {
+			var redirectTo = url+"?myteam="+event.target.value;
+			window.location.href = redirectTo;
+		}
+	}
+})
+</script>
+{% endblock %}

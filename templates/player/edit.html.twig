@@ -1,0 +1,41 @@
+{% extends "base.html.twig" %}
+{% block content %}
+    <br/>
+    <br/>
+    <div class="container-fluid">
+        <div class="col-md-6 offset-md-3">
+            <form action="{{ path('update-player', {id:player.id}) }}" method="POST">
+                <div class="row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Name
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Name" value="{{ player.name }}" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Surname
+                        </label>
+                        <input type="text" class="form-control" id="surname" name="surname" placeholder="Surname" value="{{ player.surname }}" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Select Team
+                        </label>
+                        <select name="team_id" class="form-control" disabled>
+                            {% for team in teams %}
+                                <option value="{{ team.id }}" {% if (player.team) and (team.id == player.team.id) %} selected {% endif %}>
+                                    {{ team.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <br/>
+                <button type="submit" class="btn btn-primary" style="min-width:140px;">
+                    Update Player
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

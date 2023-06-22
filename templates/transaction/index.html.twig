@@ -1,0 +1,140 @@
+{% extends "base.html.twig" %}
+{% block content %}
+	
+<br/>
+<br/>
+<div class="container-fluid">
+    <div class="col-md-10 offset-md-1">
+        <div class="row" id="app-myteam">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label class="form-label">
+                        Select/Change Your Current Team
+                    </label>
+                    <select name="team_id" id="team_id" class="form-control">
+                        {% for team in teams %}
+                            <option value="{{ team.id }}" {% if (myteam) and (team.id == myteam.id) %} selected {% endif %}>
+                                {{ team.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-10 offset-md-1">
+        {% if myteam %}
+            <div class="row">
+                <br/>
+                <br/>
+            </div>
+            <div class="row" id="app-players">
+                <div class="col-md-12">
+                    <h3 class="">{{ myteam.name }}| ${{ myteam.balance }}</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Player
+                                </th>
+                                <th>
+                                    Deal with
+                                </th>
+                                <th>
+                                    But/Sell
+                                </th>
+                                <th>
+                                    Amount
+                                </th>
+                                <th>
+                                    Date
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                                <tr>
+                                    <td>
+                                        {{ log.player.name }}
+                                        {{ log.player.surname }}
+                                    </td>
+                                    <td>
+                                        {% if log.seller.id == myteam.id %}
+                                            {{ log.buyer.name }}
+                                        {% else %}
+                                            {{ log.seller.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.seller.id == myteam.id %}
+                                            Sell
+                                            								
+                                        {% else %}
+                                            Buy
+                                            								
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.seller.id == myteam.id %}
+                                            <span class="text-success">
+                                                +
+                                                {{ log.transactionAmount }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-danger">
+                                                -
+                                                {{ log.transactionAmount }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ log.getCreatedAt().format('d-m-Y H:i') }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+					<ul class="pagination">
+							<li class="page-item {% if page <= 1 %} disabled {% endif %} ">
+								<a class="page-link" {% if page <= 1 %} href="javscript:void(0)" {% else %} href="{{url('transaction')}}?page={{ (page-1) }}" {% endif %} >«&nbsp;Previous</a>
+							</li>
+							{% if (totalPage > 15 and page > 3)  %}
+							<li class="page-item disabled">
+								<span class="page-link">...</span>
+							</li>
+							{% endif %}	 
+							{% for i in 1..totalPage %}
+							{% if (totalPage <= 15 or (i > (page-3) and i < (page+3)) ) %}
+								 <li class="page-item {% if i == page %} active {% endif %}">
+									<a class="page-link " href="{{url('transaction')}}?page={{i}}">{{i}}</a>
+								 </li>
+							{% endif %}	 
+							{% endfor %}
+							{% if (totalPage > 15 and page < (totalPage-3))  %}
+							<li class="page-item disabled">
+								<span class="page-link">...</span>
+							</li>
+							{% endif %}	
+							<li class="page-item {% if page >= totalPage %} disabled {% endif %} ">
+								<a class="page-link" {% if page >= totalPage %} href="javscript:void(0)" {% else %} href="{{url('transaction')}}?page={{ (page+1) }}" {% endif %} rel="next">Next&nbsp;»</a>
+							</li>
+					</ul>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function(){
+	$("#team_id").change(function () {
+		var url = '{{ url('transaction') }}';
+        var team_id = this.value;
+        var redirectTo = url+"?myteam="+team_id;
+		window.location.href = redirectTo;
+    });
+});
+</script>
+{% endblock %}

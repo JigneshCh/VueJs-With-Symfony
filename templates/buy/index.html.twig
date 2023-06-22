@@ -1,0 +1,210 @@
+{% extends "base.html.twig" %}
+{% block css %}
+    <style>
+	.page-btn {
+		text-decoration: none;
+		display: inline-block;
+		padding: 8px 16px;
+	}
+	.page-btn:hover {
+		background-color: #ddd;
+		color: black;
+	}
+	.page-btn {
+		background-color: #f1f1f1;
+		color: black;
+	}
+	.has-data {
+		background-color: #04AA6D !important;
+		color: white !important;
+	}
+	</style>
+{% endblock %}
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"/></script>
+{% endblock %}
+{% block content %}
+    <br/>
+    <br/>
+    <div class="container-fluid">
+        <div class="col-md-10 offset-md-1">
+            <div class="row" id="app-myteam">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Select/Change Your Current Team
+                        </label>
+                        <select name="team_id" class="form-control" @change="changeMyTeam($event,'{{ url('buy-player') }}')">
+                            {% for team in teams %}
+                                <option value="{{ team.id }}" {% if (myteam) and (team.id == myteam.id) %} selected {% endif %}>
+                                    {{ team.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 offset-md-1">
+            {% if myteam %}
+                <div class="row">
+                    <br/>
+                    <br/>
+                </div>
+                <div class="row" id="app-players">
+                    <div class="col-md-8">
+                        <h3 class="">{{ myteam.name }}| ${{ myteam.balance }}</h3>
+                        <ul class="list-group">
+                            <li class="list-group-item" v-for="item in items">
+                                {{ "{{ item.player.name }} {{ item.player.surname }} ({{ item.team.name }}) - {{ item.ondate }} " }}
+                                <button type="button" :disabled="item.team.id == {{ myteam.id }}" @click="getBid(item)" class="btn btn-small btn-info float-end m-1">
+                                    Bye @ 
+                                    {{ " ${{ item.bid_price }} " }}
+                                </button>
+                            </li>
+                        </ul>
+                        <div>
+                            <br/>
+                            <a href="#" @click="getActiveBids(pagination.prev)" :disabled="!pagination.prev" class="previous page-btn" v-bind:class="[pagination.prev ? 'has-data' : '']">
+                                &laquo; Previous
+                            </a>
+                            <a href="#" @click="getActiveBids(pagination.next)" :disabled="!pagination.next" class="next page-btn" v-bind:class="[pagination.next ? 'has-data' : '']">
+                                Next &raquo;
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="row d-flex justify-content-center" v-if="selectedBid.id">
+                            <div class="col col-xl-10">
+                                <div class="card" style="border-radius: 15px;">
+                                    <div class="card-body">
+                                        <h3 class="mb-3">
+                                            {{ "{{ selectedBid.player.name }} {{ selectedBid.player.surname }} - {{ selectedBid.team.name }}" }}
+                                        </h3>
+                                        <p class="small mb-0 text-warning" v-if="selectedBid.bid_price > {{ myteam.balance }}">
+                                            You have low balance to buy the player!
+                                        </p>
+                                        <p class="small mb-0" v-else>
+                                            You will be charge of $
+                                            {{ myteam.balance }}
+                                            , After buying your remaining balance will be $
+                                            {{ "{{ (mybalance - selectedBid.bid_price) }}" }}
+                                        </p>
+                                        <hr class="my-4" />
+                                        <form action="" method="POST">
+                                            <div class="row">
+                                                <button type="button" @click="submitForm(selectedBid)" :disabled="selectedBid.bid_price > {{ myteam.balance }}" class="btn btn-primary" style="min-width:140px;">
+                                                    Pay $
+                                                    {{ "{{ selectedBid.bid_price }}" }}
+                                                    To Buy
+                                                </button>
+                                                <button type="button" @click="getBid({})" class="btn btn-warning" style="min-width:140px;">
+                                                    Cancele
+                                                </button>
+                                            </div>
+                                            <br/>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+<script>
+{% if myteam %}
+myObject = new Vue({
+	el: '#app-players',
+	data: {
+        items: [],
+		selectedBid: {},
+		pagination: {'prev':0,'next':0},
+		bid_price:0,
+		mybalance:{{myteam.balance}},
+		submiting:0,
+		disableform:0,
+    },
+    mounted: function () {
+		this.getActiveBids(1);
+    },
+	methods: {
+		alertMessage(responce) {
+			if(responce.code == 200 && responce.message !=""){
+				swal("Success", responce.message, "success");
+			}else if(responce.code != 200 && responce.message !=""){
+				swal("Error", responce.message, "error");
+			}
+		},
+		getActiveBids(page) {
+			if(!page){
+				return false;
+			}
+			var self = this;
+			$.ajax({
+				url: "{{ path('get-active-bids', {id:myteam.id}) }}",
+				method: 'GET',
+				data:{'page':page},
+				success: function (data) {
+				   self.items = data.data;
+				   self.pagination = data.pagination;
+				},
+				error: function (error) {
+					swal("Error", "Something Went Wrong!", "error");
+				}
+			});
+		},
+		getBid(bid) {
+			this.selectedBid = {};
+			this.selectedBid = bid;
+		},
+		submitForm(selectedBid) {
+			var self = this;
+			this.submiting = 1;
+			this.disableform = 1;
+			var url = "{{ path('buy-player-payment') }}";
+			var formdata = {'bid_id':selectedBid.id};
+			
+			$.ajax({
+				url: url,
+				method: 'POST',
+				data: formdata,
+				success: function (data) {
+					self.disableform = 0;
+					self.getBid({});
+					swal({  
+						  title: "Success",  
+						  text: data.message,  
+						}).then(function(isConfirm) {
+							location.reload();
+						}); 
+				},
+				error: function (error) {
+					self.disableform = 0;
+					swal("Error", "Something Went Wrong!", "error");
+				}
+			});
+			e.preventDefault();
+			return false;
+		},
+	}
+})
+{% endif %}
+myObject = new Vue({
+	el: '#app-myteam',
+	data: {
+		key: ""
+	},
+	methods: {
+		changeMyTeam(event,url) {
+			var redirectTo = url+"?myteam="+event.target.value;
+			window.location.href = redirectTo;
+		}
+	}
+})
+</script>
+{% endblock %}

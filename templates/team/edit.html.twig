@@ -1,0 +1,35 @@
+{% extends "base.html.twig" %}
+{% block content %}
+    <br/>
+    <br/>
+    <div class="container-fluid">
+        <div class="col-md-6 offset-md-3">
+            <form action="{{ path('update-team', {id:team.id}) }}" method="POST">
+                <div class="row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Team name
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Team name" value="{{ team.name }}" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Country
+                        </label>
+                        <select class="form-control" id="country_code" name="country_code">
+                            {% for key,value in countries %}
+                                <option value="{{ key }}" {% if team.countryCode ==key %} selected {% endif %}>
+                                    {{ value }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <br/>
+                <button type="submit" class="btn btn-primary" style="min-width:140px;">
+                    Update Team
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

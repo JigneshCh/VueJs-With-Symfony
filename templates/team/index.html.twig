@@ -1,0 +1,62 @@
+{% extends "base.html.twig" %}
+{% block content %}
+    <br/>
+    <br/>
+    <div class="container-fluid">
+        <div class="col-md-6 offset-md-3 col-xs-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <a href="{{ path('create-team') }}" class="btn btn-success mb-1">
+                        Create Team
+                    </a>
+                </div>
+            </div>
+			<ul class="list-group">
+                {% for team in teams %}
+                    <li {% if team.id %2 !=0 %} class="list-group-item list-group-item-success" {% else %} class="list-group-item" {% endif %}>
+                        <span class="fi fi-{{ team.countryCode }}"></span>
+						<a href="{{ path('edit-team', {id:team.id}) }}"> {{ team.name }} </a> 
+                        <form action="{{ path('delete-team') }}" method="POST" class="delete_form">
+							<input type="hidden" name="team_id" value="{{team.id}}" />
+							<button type="button" class="btn btn-small btn-danger float-end m-1 delete_item_form">
+								Delete
+							</button>
+						</form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <br/>
+        <div class="col-md-6 offset-md-3 col-xs-12">
+            <nav aria-label="Pagination">
+                <ul class="pagination">
+                    {{ knp_pagination_render(teams) }}
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block script %}
+<script>
+$(document).ready(function(){
+  $(".delete_item_form").click(function(event) {
+    var self=this;
+	swal({  
+	  title: " Confirm?",  
+	  text: "Are you sure!. You want to delete this Item?",  
+	  type: "warning",  
+	  showCancelButton: true,  
+	  confirmButtonText: " Confirm, delete it!",
+	}).then(function(isConfirm) {
+		if (typeof isConfirm.value !== "undefined") {
+			$(self).parent().submit();
+		}else{
+			return false;
+		} 
+	}); 	
+  });
+});
+</script>
+{% endblock %}
