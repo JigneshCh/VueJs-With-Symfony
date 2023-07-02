@@ -20,6 +20,9 @@ This is a sample Symfony-5 code with following functionality
 
 ## Overview 
 
+ - Url_1: http://13.234.224.145/Jignesh-demo/VueJs-With-Symfony/public/
+ - Url_2: http://jc-deloper.com/Jignesh-demo/VueJs-With-Symfony/public/
+ 
 #Team | Player Crud
 
  - Crud functions for Team and Player data 

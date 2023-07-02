@@ -43,7 +43,7 @@ class TeamController extends AbstractController
 		$item->setName($request->request->get('name'));
 		$item->setCountryCode($request->request->get('country_code'));
 		$coupon_code = $request->request->get('coupon_code');
-		$balance = random_int(1000, 9999) * strlen($coupon_code)*2; //Test logic
+		$balance = random_int(1000, 9999) * strlen($coupon_code)*5; //Test logic
 
 		$item->setBalance($balance);
 

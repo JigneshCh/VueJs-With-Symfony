@@ -9,7 +9,7 @@
         </title>
         {% block stylesheets %}
             {#{{ encore_entry_link_tags('app') }}#}
-            <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+            <link rel="stylesheet" href="{{ path('home') }}/assets/css/bootstrap.min.css" />
             <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.min.css'></link>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.6.6/css/flag-icons.min.css" />
 
@@ -17,7 +17,7 @@
         {% block css %}{% endblock %}
         {% block javascripts %}
             {#{{ encore_entry_script_tags('app') }}#}
-            <script src="/assets/js/bootstrap.bundle.min.js"></script>
+            <script src="{{ path('home') }}/assets/js/bootstrap.bundle.min.js"></script>
         {% endblock %}
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"/></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
